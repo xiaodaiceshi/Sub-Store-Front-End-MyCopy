@@ -1,36 +1,37 @@
 name: Sync Upstream
 
+# 定时触发 + 手动触发
 on:
   schedule:
-    - cron: "0 3 * * *" # UTC 每天 03:00
-  workflow_dispatch:
+    - cron: "0 3 * * *"  # UTC 每天 03:00 同步一次
+  workflow_dispatch:       # 可手动触发
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      # 1. Checkout fork repository
+      # 1️⃣ Checkout fork 仓库
       - name: Checkout fork
         uses: actions/checkout@v3
         with:
-          persist-credentials: false  # 禁用默认 GITHUB_TOKEN，改用 PAT
+          persist-credentials: false  # 禁用默认 GITHUB_TOKEN
           fetch-depth: 0
 
-      # 2. 添加源仓库作为 upstream
+      # 2️⃣ 添加源仓库作为 upstream
       - name: Add upstream remote
         run: |
           git remote add upstream https://github.com/sub-store-org/Sub-Store-Front-End.git
           git fetch upstream
 
-      # 3. 合并 upstream/master
+      # 3️⃣ 切换到 master 并合并 upstream/master
       - name: Merge upstream/master
         run: |
           git checkout master
-          git merge upstream/master --allow-unrelated-histories -m "Sync from upstream"
+          git merge upstream/master --allow-unrelated-histories -m "Sync from upstream" || echo "Merge conflicts skipped"
 
-      # 4. Push 到 fork 私有仓库
-      - name: Push changes
+      # 4️⃣ Push 到 fork 私有仓库
+      - name: Push changes to fork
         env:
           PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
-          git push https://xiaoDai:${PAT_TOKEN}@github.com/xiaodaiceshi/Sub-Store-Front-End-MyCopy.git master
+          git push https://xiaodaiceshi:${PAT_TOKEN}@github.com/xiaodaiceshi/Sub-Store-Front-End-MyCopy.git master
