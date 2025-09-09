@@ -1,44 +1,37 @@
-name: Auto Sync Upstream
+name: Sync Upstream
 
-# 触发条件
+# 触发条件：每天定时 + 手动触发
 on:
   schedule:
-    # 每天 UTC 2 点自动同步
-    - cron: '0 2 * * *'
-  workflow_dispatch:  # 支持手动触发
+    - cron: "0 3 * * *" # UTC 时间每天 03:00
+  workflow_dispatch:
 
 jobs:
   sync:
     runs-on: ubuntu-latest
-
     steps:
-      # 1️⃣ 检出你的仓库
-      - name: Checkout repository
+      # 1. Checkout 当前仓库
+      - name: Checkout fork repository
         uses: actions/checkout@v3
         with:
-          persist-credentials: false  # 不使用自动 token
+          persist-credentials: true
+          fetch-depth: 0  # 获取完整历史记录，方便 merge
 
-      # 2️⃣ 配置 Git 用户信息
-      - name: Set up Git
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-
-      # 3️⃣ 添加上游仓库
+      # 2. 添加源仓库作为 upstream
       - name: Add upstream remote
         run: |
           git remote add upstream https://github.com/sub-store-org/Sub-Store-Front-End.git
-
-      # 4️⃣ 拉取上游更新并 rebase
-      - name: Fetch and rebase
-        run: |
           git fetch upstream
-          git checkout master                 # <-- 直接指定你的默认分支
-          git rebase upstream/master
 
-      # 5️⃣ 推送更新到你的仓库
-      - name: Push changes
-        env:
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # 3. 合并 upstream/master 到本地 master
+      - name: Merge upstream/master
+        run: |
+          git checkout master
+          git merge upstream/master --allow-unrelated-histories -m "Sync from upstream"
+
+      # 4. Push 到 fork 仓库
+      - name: Push changes to fork
         run: |
           git push origin master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
