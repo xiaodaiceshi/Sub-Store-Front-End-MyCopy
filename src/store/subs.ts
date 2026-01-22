@@ -307,9 +307,20 @@ export const useSubsStore = defineStore('subsStore', {
       //   waitTime: 0,
       // });
 
+      const flowTasks = [] as Array<() => Promise<void>>;
+
+      flowsUrlList.forEach((item, index) => {
+        const [url, , noFlow] = item;
+        if (noFlow) {
+          this.flows[url] = { status:'noFlow' };
+          return;
+        }
+        flowTasks.push(() => asyncGetFlow(item, index));
+      });
+
       await executeAsyncTasks(
-        flowsUrlList.map((item, index) => () =>  asyncGetFlow(item, index)),
-        { concurrency: 3 }
+        flowTasks,
+        { concurrency: localStorage.getItem('concurrency') ? parseInt(localStorage.getItem('concurrency') as string, 10) : 3 }
       )
   
       // const batches = [];
@@ -376,11 +387,11 @@ export const useSubsStore = defineStore('subsStore', {
         console.log('fetchShareData err', err);
       });
     },
-    async deleteShare(token: string, isShowNotify: boolean = true) {
+    async deleteShare(token: string, type: string, name: string, isShowNotify: boolean = true) {
       try {
         const { showNotify } = useAppNotifyStore();
 
-        const { data } = await shareApi.deleteShare(token);
+        const { data } = await shareApi.deleteShare(token, type, name);
         if (data.status === "success") {
           await this.fetchShareData();
           isShowNotify && showNotify({
@@ -392,11 +403,11 @@ export const useSubsStore = defineStore('subsStore', {
         console.log('deleteShare error', error);
       }
     },
-    async updateShare(token: string, data: ShareToken) {
+    async updateShare(token: string, type: string, name:string, data: ShareToken) {
       const { showNotify } = useAppNotifyStore();
       try {
-        await shareApi.deleteShare(token);
-        await shareApi.createShare(data); 
+        await shareApi.deleteShare(token, type, name);
+        await shareApi.createShare(data);
         await this.fetchShareData();
       } catch (error) {
         console.log('updateShare error', error);

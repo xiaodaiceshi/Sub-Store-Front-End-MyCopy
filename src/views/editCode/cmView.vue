@@ -186,7 +186,7 @@ const getjsjson = (res) => {
   // if (props.isJS) return false;
   try {
     const jsRegex =
-      /(?:function|var|let|const|if|else|return|try|catch|finally|typeof|delete|async|await)\s/;
+      /(?:function|var|let|const|if|else|return|try|catch|finally|typeof|delete|async|await|Error:)\s/;
     if (jsRegex.test(res.slice(0, 4000))) {
       setHJ();
       console.log("---setHJ");
@@ -349,7 +349,7 @@ const pasteNav = async () => {
   } catch (e) {
     showNotify({
       type: "warning",
-      title: "获取剪贴板失败: 非Https",
+      title: "获取剪贴板失败: 本地/HTTPS 环境下可用(或手动配置权限)"
     });
   }
 };

@@ -17,6 +17,9 @@ interface SettingsPostData {
   defaultUserAgent?: string;
   defaultTimeout?: string;
   cacheThreshold?: string;
+  resourceCacheTtl?: string;
+  headersCacheTtl?: string;
+  scriptCacheTtl?: string;
   theme?: {
     auto: boolean;
     name?: CustomTheme;
@@ -37,6 +40,7 @@ interface SettingsPostData {
     showFloatingRefreshButton?: boolean; // 显示悬浮刷新按钮
     showFloatingAddButton?: boolean; // 显示悬浮添加按钮
     displayPreviewInWebPage?: boolean; // 在网页中预览
+    invalidShareFakeNode?: boolean; // 无效分享返回假节点(防客户端缓存)
     istabBar?: boolean; // 隐藏 "Gist 同步" 页
     istabBar2?: boolean; // 隐藏 "文件" 页
     subProgressStyle?: string; // 订阅进度样式

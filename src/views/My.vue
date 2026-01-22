@@ -113,71 +113,70 @@
           </nut-button>
         </div>
       </div>
-      <div class="config-card">
-        <div class="title-wrapper">
-          <h1>{{ $t(`myPage.config`) }}</h1>
+      <div class="config-card" v-if="storageType !== 'manual'" >
+        <div class="title-wrapper" @click="isGitHubConfigEditing ? exitEditMode('github') : toggleEditMode('github')">
+          <h1>{{ $t(`myPage.githubConfig`) }}</h1>
           <div class="config-btn-wrapper">
             <nut-button
-              v-if="isEditing"
+              v-if="isGitHubConfigEditing"
               class="cancel-btn"
               plain
               type="info"
               size="mini"
-              @click="exitEditMode"
+              @click.stop="exitEditMode('github')"
               :disabled="isEditLoading"
             >
               <font-awesome-icon icon="fa-solid fa-ban" />
               {{ $t(`myPage.btn.cancel`) }}
             </nut-button>
             <nut-button
+              v-if="isGitHubConfigEditing"
               class="save-btn"
               type="primary"
               size="mini"
-              @click="toggleEditMode"
+              @click.stop="toggleEditMode('github')"
               :loading="isEditLoading"
             >
               <font-awesome-icon
-                v-if="!isEditing"
+                v-if="!isGitHubConfigEditing"
                 icon="fa-solid fa-pen-to-square"
               />
               <font-awesome-icon
-                v-else-if="!isEditLoading && isEditing"
+                v-else-if="!isEditLoading && isGitHubConfigEditing"
                 icon="fa-solid fa-floppy-disk"
               />
-              {{ !isEditing ? $t(`myPage.btn.edit`) : $t(`myPage.btn.save`) }}
+              {{ !isGitHubConfigEditing ? $t(`myPage.btn.edit`) : $t(`myPage.btn.save`) }}
             </nut-button>
+            <nut-icon v-else class="right-icon" name="right"></nut-icon>
           </div>
         </div>
-        <div class="config-input-wrapper">
+        <div class="config-input-wrapper" v-if="isGitHubConfigEditing">
           <nut-input
-            v-if="storageType !== 'manual'"
             class="input"
             v-model="userInput"
-            :disabled="!isEditing"
+            :disabled="!isGitHubConfigEditing"
             :placeholder="$t(`myPage.placeholder.githubUser`)"
             type="text"
             input-align="left"
             :left-icon="iconUser"
           >
             <!-- <template #button>
-              <nut-button :disabled="!isEditing" :plain="!isEditing" size="mini" :type="isEditing ? 'primary' : 'info' " @click="toggleSyncPlatform">{{ syncPlatformInput === 'gitlab' ? ( isEditing ?'切换回 Gist' : 'GitLab Snippet (β)') : ( isEditing ?'切换到 GitLab Snippet (β)' : 'Gist') }}</nut-button>
+              <nut-button :disabled="!isGitHubConfigEditing" :plain="!isGitHubConfigEditing" size="mini" :type="isGitHubConfigEditing ? 'primary' : 'info' " @click="toggleSyncPlatform">{{ syncPlatformInput === 'gitlab' ? ( isGitHubConfigEditing ?'切换回 Gist' : 'GitLab Snippet (β)') : ( isGitHubConfigEditing ?'切换到 GitLab Snippet (β)' : 'Gist') }}</nut-button>
             </template> -->
           </nut-input>
           <nut-input
-            v-if="storageType !== 'manual'"
             class="input"
             v-model="tokenInput"
-            :disabled="!isEditing"
+            :disabled="!isGitHubConfigEditing"
             :placeholder="$t(`myPage.placeholder.gistToken`)"
             type="text"
             input-align="left"
             :left-icon="iconKey"
           />
           <nut-input
-            v-if="storageType !== 'manual'"
             class="input"
             v-model="githubProxyInput"
-            :disabled="!isEditing"
+            :disabled="!isGitHubConfigEditing"
             :placeholder="$t(`myPage.placeholder.githubProxy`)"
             type="text"
             input-align="left"
@@ -185,10 +184,51 @@
             right-icon="tips"
             @click-right-icon="githubProxyTips"
           />
+          
+        </div>
+      </div>
+      <div class="config-card">
+        <div class="title-wrapper"  @click="isRequestConfigEditing ? exitEditMode('request') : toggleEditMode('request')">
+          <h1>{{ $t(`myPage.requestConfig`) }}</h1>
+          <div class="config-btn-wrapper">
+            <nut-button
+              v-if="isRequestConfigEditing"
+              class="cancel-btn"
+              plain
+              type="info"
+              size="mini"
+              @click.stop="exitEditMode('request')"
+              :disabled="isEditLoading"
+            >
+              <font-awesome-icon icon="fa-solid fa-ban" />
+              {{ $t(`myPage.btn.cancel`) }}
+            </nut-button>
+            <nut-button
+             v-if="isRequestConfigEditing"
+              class="save-btn"
+              type="primary"
+              size="mini"
+              @click.stop="toggleEditMode('request')"
+              :loading="isEditLoading"
+            >
+              <font-awesome-icon
+                v-if="!isRequestConfigEditing"
+                icon="fa-solid fa-pen-to-square"
+              />
+              <font-awesome-icon
+                v-else-if="!isEditLoading && isRequestConfigEditing"
+                icon="fa-solid fa-floppy-disk"
+              />
+              {{ !isRequestConfigEditing ? $t(`myPage.btn.edit`) : $t(`myPage.btn.save`) }}
+            </nut-button>
+             <nut-icon v-else class="right-icon" name="right"></nut-icon>
+          </div>
+        </div>
+        <div class="config-input-wrapper" v-if="isRequestConfigEditing">
           <nut-input
             class="input"
             v-model="proxyInput"
-            :disabled="!isEditing"
+            :disabled="!isRequestConfigEditing"
             :placeholder="$t(`myPage.placeholder.defaultProxy`)"
             type="text"
             input-align="left"
@@ -199,7 +239,7 @@
           <nut-input
             class="input"
             v-model="uaInput"
-            :disabled="!isEditing"
+            :disabled="!isRequestConfigEditing"
             :placeholder="$t(`myPage.placeholder.defaultUserAgent`)"
             type="text"
             input-align="left"
@@ -210,7 +250,7 @@
           <nut-input
             class="input"
             v-model="timeoutInput"
-            :disabled="!isEditing"
+            :disabled="!isRequestConfigEditing"
             :placeholder="$t(`myPage.placeholder.defaultTimeout`)"
             type="number"
             input-align="left"
@@ -218,10 +258,51 @@
             right-icon="tips"
             @click-right-icon="timeoutTips"
           />
+        </div>
+      </div>
+      <div class="config-card">
+        <div class="title-wrapper" @click="isCacheConfigEditing ? exitEditMode('cache') : toggleEditMode('cache')">
+          <h1>{{ $t(`myPage.cacheConfig`) }}</h1>
+          <div class="config-btn-wrapper">
+            <nut-button
+              v-if="isCacheConfigEditing"
+              class="cancel-btn"
+              plain
+              type="info"
+              size="mini"
+              @click.stop="exitEditMode('cache')"
+              :disabled="isEditLoading"
+            >
+              <font-awesome-icon icon="fa-solid fa-ban" />
+              {{ $t(`myPage.btn.cancel`) }}
+            </nut-button>
+            <nut-button
+              v-if="isCacheConfigEditing"
+              class="save-btn"
+              type="primary"
+              size="mini"
+              @click.stop="toggleEditMode('cache')"
+              :loading="isEditLoading"
+            >
+              <font-awesome-icon
+                v-if="!isCacheConfigEditing"
+                icon="fa-solid fa-pen-to-square"
+              />
+              <font-awesome-icon
+                v-else-if="!isEditLoading && isCacheConfigEditing"
+                icon="fa-solid fa-floppy-disk"
+              />
+              {{ !isCacheConfigEditing ? $t(`myPage.btn.edit`) : $t(`myPage.btn.save`) }}
+            </nut-button>
+            <nut-icon v-else class="right-icon" name="right"></nut-icon>
+          </div>
+        </div>
+        <div class="config-input-wrapper" v-if="isCacheConfigEditing">
+        
           <nut-input
             class="input"
             v-model="cacheThresholdInput"
-            :disabled="!isEditing"
+            :disabled="!isCacheConfigEditing"
             :placeholder="$t(`myPage.placeholder.cacheThreshold`)"
             type="number"
             input-align="left"
@@ -229,6 +310,103 @@
             right-icon="tips"
             @click-right-icon="cacheThresholdTips"
           />
+          <nut-input
+            class="input"
+            v-model="resourceCacheTtlInput"
+            :disabled="!isCacheConfigEditing"
+            :placeholder="$t(`myPage.placeholder.resourceCacheTtl`)"
+            type="number"
+            input-align="left"
+            :left-icon="iconResourceCacheTtl"
+            right-icon="tips"
+            @click-right-icon="resourceCacheTtlTips"
+          />
+          <nut-input
+            class="input"
+            v-model="headersCacheTtlInput"
+            :disabled="!isCacheConfigEditing"
+            :placeholder="$t(`myPage.placeholder.headersCacheTtl`)"
+            type="number"
+            input-align="left"
+            :left-icon="iconHeadersCacheTtl"
+            right-icon="tips"
+            @click-right-icon="headersCacheTtlTips"
+          />
+          <nut-input
+            class="input"
+            v-model="scriptCacheTtlInput"
+            :disabled="!isCacheConfigEditing"
+            :placeholder="$t(`myPage.placeholder.scriptCacheTtl`)"
+            type="number"
+            input-align="left"
+            :left-icon="iconScriptCacheTtl"
+            right-icon="tips"
+            @click-right-icon="scriptCacheTtlTips"
+          />
+        </div>
+      </div>
+      <div class="config-card">
+        <div class="title-wrapper" @click="isFrontEndConfigEditing ? exitEditMode('frontEnd') : toggleEditMode('frontEnd')">
+          <h1>{{ $t(`myPage.frontEndConfig`) }}</h1>
+          <div class="config-btn-wrapper">
+            <nut-button
+              v-if="isFrontEndConfigEditing"
+              class="cancel-btn"
+              plain
+              type="info"
+              size="mini"
+              @click.stop="exitEditMode('frontEnd')"
+              :disabled="isEditLoading"
+            >
+              <font-awesome-icon icon="fa-solid fa-ban" />
+              {{ $t(`myPage.btn.cancel`) }}
+            </nut-button>
+            <nut-button
+              v-if="isFrontEndConfigEditing"
+              class="save-btn"
+              type="primary"
+              size="mini"
+              @click.stop="toggleEditMode('frontEnd')"
+              :loading="isEditLoading"
+            >
+              <font-awesome-icon
+                v-if="!isFrontEndConfigEditing"
+                icon="fa-solid fa-pen-to-square"
+              />
+              <font-awesome-icon
+                v-else-if="!isEditLoading && isFrontEndConfigEditing"
+                icon="fa-solid fa-floppy-disk"
+              />
+              {{ !isFrontEndConfigEditing ? $t(`myPage.btn.edit`) : $t(`myPage.btn.save`) }}
+            </nut-button>
+            <nut-icon v-else class="right-icon" name="right"></nut-icon>
+          </div>
+        </div>
+        <div class="config-input-wrapper" v-if="isFrontEndConfigEditing">
+        
+          <nut-input
+            class="input"
+            v-model="concurrencyInput"
+            :disabled="!isFrontEndConfigEditing"
+            :placeholder="$t(`myPage.placeholder.concurrency`)"
+            type="number"
+            input-align="left"
+            :left-icon="iconConcurrency"
+            right-icon="tips"
+            @click-right-icon="concurrencyTips"
+          />
+          <nut-input
+            class="input"
+            v-model="apiCheckTimeoutInput"
+            :disabled="!isFrontEndConfigEditing"
+            :placeholder="$t(`myPage.placeholder.apiCheckTimeout`)"
+            type="number"
+            input-align="left"
+            :left-icon="iconTimeout"
+            right-icon="tips"
+            @click-right-icon="apiCheckTimeoutTips"
+          />
+        
         </div>
       </div>
 
@@ -236,26 +414,26 @@
         <nut-cell
           v-if="shareBtnVisible"
           :title="$t(`moreSettingPage.shareManageTitle`)"
-          class="change-themes"
+          class="right-icon"
           @click.stop="onClickShareManage"
           is-link
         ></nut-cell>
         <nut-cell
           :title="$t(`apiSettingPage.apiSettingTitle`)"
-          class="change-themes"
+          class="right-icon"
           @click.stop="onClickAPISetting"
           is-link
         ></nut-cell>
         <nut-cell
           :title="$t(`moreSettingPage.moreSettingTitle`)"
-          class="change-themes"
+          class="right-icon"
           @click.stop="onClickMore"
           is-link
         ></nut-cell>
 
         <nut-cell
           :title="$t(`navBar.pagesTitle.aboutUs`)"
-          class="change-themes"
+          class="right-icon"
           @click.stop="onClickAbout"
           is-link
         ></nut-cell>
@@ -290,7 +468,11 @@ import iconProxy from "@/assets/icons/proxy.svg";
 import icongithubProxy from "@/assets/icons/githubProxy.svg";
 import iconUA from "@/assets/icons/user-agent.svg";
 import iconMax from "@/assets/icons/max.svg";
+import iconHeadersCacheTtl from "@/assets/icons/headersCacheTtl.svg";
+import iconResourceCacheTtl from "@/assets/icons/resourceCacheTtl.svg";
+import iconScriptCacheTtl from "@/assets/icons/scriptCacheTtl.svg";
 import iconTimeout from "@/assets/icons/timeout.svg";
+import iconConcurrency from "@/assets/icons/concurrency.svg";
 import { useAppNotifyStore } from "@/store/appNotify";
 import { useGlobalStore } from "@/store/global";
 import { useSettingsStore } from "@/store/settings";
@@ -311,7 +493,7 @@ const router = useRouter();
 const { showNotify } = useAppNotifyStore();
 const { currentUrl: host } = useHostAPI();
 const settingsStore = useSettingsStore();
-const { githubUser, gistToken, syncTime, avatarUrl, defaultUserAgent, defaultProxy, defaultTimeout, cacheThreshold, syncPlatform, githubProxy, gistUpload } =
+const { githubUser, gistToken, syncTime, avatarUrl, defaultUserAgent, defaultProxy, defaultTimeout, cacheThreshold, resourceCacheTtl, headersCacheTtl, scriptCacheTtl, syncPlatform, githubProxy, gistUpload } =
   storeToRefs(settingsStore);
 
 const displayAvatar = computed(() => {
@@ -348,15 +530,23 @@ const uaInput = ref("");
 const proxyInput = ref("");
 const timeoutInput = ref("");
 const cacheThresholdInput = ref("");
-const isEditing = ref(false);
+const resourceCacheTtlInput = ref("");
+const headersCacheTtlInput = ref("");
+const scriptCacheTtlInput = ref("");
+const concurrencyInput = ref("");
+const apiCheckTimeoutInput = ref("");
+const isGitHubConfigEditing = ref(false);
+const isRequestConfigEditing = ref(false);
+const isCacheConfigEditing = ref(false);
+const isFrontEndConfigEditing = ref(false);
 const isEditLoading = ref(false);
 const isInit = ref(false);
 const storageType = ref('gist');
 const fileInput = ref(null);
 
-const toggleEditMode = async () => {
+const toggleEditMode = async (type) => {
   isEditLoading.value = true;
-  if (isEditing.value) {
+  if ((type === 'github' && isGitHubConfigEditing.value) || (type === 'request' && isRequestConfigEditing.value) || (type === 'cache' && isCacheConfigEditing.value)) {
     await settingsStore.changeSettings({
       syncPlatform: syncPlatformInput.value,
       githubUser: userInput.value,
@@ -366,6 +556,9 @@ const toggleEditMode = async () => {
       defaultProxy: proxyInput.value,
       defaultTimeout: timeoutInput.value,
       cacheThreshold: cacheThresholdInput.value,
+      resourceCacheTtl: resourceCacheTtlInput.value,
+      headersCacheTtl: headersCacheTtlInput.value,
+      scriptCacheTtl: scriptCacheTtlInput.value,
     });
     setDisplayInfo();
   } else {
@@ -377,14 +570,77 @@ const toggleEditMode = async () => {
     proxyInput.value = defaultProxy.value;
     timeoutInput.value = defaultTimeout.value;
     cacheThresholdInput.value = cacheThreshold.value;
+    resourceCacheTtlInput.value = resourceCacheTtl.value;
+    headersCacheTtlInput.value = headersCacheTtl.value;
+    scriptCacheTtlInput.value = scriptCacheTtl.value;
+  }
+  if (type === 'frontEnd' && isFrontEndConfigEditing.value) {
+    const apiCheckTimeout = Number(apiCheckTimeoutInput.value);
+    if (!isNaN(apiCheckTimeout)) {
+      if (apiCheckTimeout > 0) {
+        console.log(`设置超时 ${apiCheckTimeout}`)
+        localStorage.setItem('timeout', apiCheckTimeout.toString());
+      } else {
+        console.log(`清除超时设置`)
+        localStorage.removeItem('timeout');
+      }
+    }else {
+      console.log(`清除超时设置`)
+      localStorage.removeItem('timeout');
+    }
+    const concurrency = parseInt(concurrencyInput.value, 10);
+    if (!isNaN(concurrency)) {
+      if (concurrency >= 1) {
+        console.log(`设置并发数 ${concurrency}`)
+        localStorage.setItem('concurrency', concurrency.toString());
+      } else {
+        console.log(`清除并发数设置`)
+        localStorage.removeItem('concurrency');
+      }
+    } else {
+      console.log(`清除并发数设置`)
+      localStorage.removeItem('concurrency');
+    }
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
+  } else {
+    const storedTimeout = localStorage.getItem('timeout');
+    if (storedTimeout) {
+      apiCheckTimeoutInput.value = storedTimeout;
+    } else {
+      apiCheckTimeoutInput.value = '';
+    }
+    const storedConcurrency = localStorage.getItem('concurrency');
+    if (storedConcurrency) {
+      concurrencyInput.value = storedConcurrency;
+    } else {
+      concurrencyInput.value = '';
+    }
   }
   isEditLoading.value = false;
-  isEditing.value = !isEditing.value;
+  if (type === 'github' && !isGitHubConfigEditing.value) {
+    isGitHubConfigEditing.value = !isGitHubConfigEditing.value;
+  } else if (type === 'cache' && !isCacheConfigEditing.value) {
+    isCacheConfigEditing.value = !isCacheConfigEditing.value;
+  } else if (type === 'request' && !isRequestConfigEditing.value) {
+    isRequestConfigEditing.value = !isRequestConfigEditing.value;
+  } else if (type === 'frontEnd' && !isFrontEndConfigEditing.value) {
+    isFrontEndConfigEditing.value = !isFrontEndConfigEditing.value;
+  }
 };
 
-const exitEditMode = () => {
+const exitEditMode = (type) => {
   setDisplayInfo();
-  isEditing.value = false;
+  if (type === 'github') {
+    isGitHubConfigEditing.value = false;
+  } else if (type === 'cache') {
+    isCacheConfigEditing.value = false;
+  } else if (type === 'request') {
+    isRequestConfigEditing.value = false;
+  } else {
+    isFrontEndConfigEditing.value = false;
+  }
   isEditLoading.value = false;
 };
 const toggleSyncPlatform = () => {
@@ -424,6 +680,9 @@ const setDisplayInfo = () => {
   proxyInput.value = defaultProxy.value || "";
   timeoutInput.value = defaultTimeout.value || "";
   cacheThresholdInput.value = cacheThreshold.value || "";
+  resourceCacheTtlInput.value = resourceCacheTtl.value || "";
+  headersCacheTtlInput.value = headersCacheTtl.value || "";
+  scriptCacheTtlInput.value = scriptCacheTtl.value || "";
 };
 
 // 同步 上传
@@ -615,7 +874,7 @@ const githubProxyTips = () => {
 const proxyTips = () => {
   Dialog({
       title: '通过代理/节点/策略进行下载',
-      content: '1. Surge(参数 policy/policy-descriptor)\n\n可设置节点代理 例: Test = snell, 1.2.3.4, 80, psk=password, version=4\n\n或设置策略/节点 例: 国外加速\n\n2. Loon(参数 node)\n\nLoon 官方文档: \n\n指定该请求使用哪一个节点或者策略组（可以使节点名称、策略组名称，也可以说是一个Loon格式的节点描述，如：shadowsocksr,example.com,1070,chacha20-ietf,"password",protocol=auth_aes128_sha1,protocol-param=test,obfs=plain,obfs-param=edge.microsoft.com）\n\n3. Stash(参数 headers["X-Surge-Policy"])/Shadowrocket(参数 headers.X-Surge-Policy)/QX(参数 opts.policy)\n\n可设置策略/节点\n\n4. Node.js 版(http/https/socks5):\n\n例: socks5://a:b@127.0.0.1:7890\n\n※ 优先级由高到低: 单条订阅, 组合订阅, 默认配置',
+      content: '1. Surge(参数 policy/policy-descriptor)\n\n可设置节点代理 例: Test = snell, 1.2.3.4, 80, psk=password, version=4\n\n或设置策略/节点 例: 国外加速\n\n2. Loon(参数 node)\n\nLoon 官方文档: \n\n指定该请求使用哪一个节点或者策略组（可以是节点名称、策略组名称，也可以是一个 Loon 格式的节点描述，如：shadowsocksr,example.com,1070,chacha20-ietf,"password",protocol=auth_aes128_sha1,protocol-param=test,obfs=plain,obfs-param=edge.microsoft.com）\n\n3. Stash(参数 headers["X-Surge-Policy"])/Shadowrocket(参数 headers.X-Surge-Policy)/QX(参数 opts.policy)\n\n可设置策略/节点\n\n4. Node.js 版(http/https/socks5):\n\n例: socks5://a:b@127.0.0.1:7890\n\n※ 优先级由高到低: 单条订阅, 组合订阅, 默认配置',
       popClass: 'auto-dialog',
       textAlign: 'left',
       okText: 'OK',
@@ -650,6 +909,61 @@ const cacheThresholdTips = () => {
   Dialog({
       title: '可尝试设置为 1024',
       content: '下载资源过大时\n若要写入缓存\n代理 app 可能会崩溃重启\n可尝试设置此值',
+      popClass: 'auto-dialog',
+      okText: 'OK',
+      noCancelBtn: true,
+      closeOnPopstate: true,
+      lockScroll: false,
+    });
+};
+const resourceCacheTtlTips = () => {
+  Dialog({
+      title: '资源缓存时间 (秒)',
+      content: '主要涉及下载订阅/下载脚本/域名解析等功能',
+      popClass: 'auto-dialog',
+      okText: 'OK',
+      noCancelBtn: true,
+      closeOnPopstate: true,
+      lockScroll: false,
+    });
+};
+const headersCacheTtlTips = () => {
+  Dialog({
+      title: '响应头缓存时间 (秒)',
+      content: '主要涉及订阅流量信息等功能',
+      popClass: 'auto-dialog',
+      okText: 'OK',
+      noCancelBtn: true,
+      closeOnPopstate: true,
+      lockScroll: false,
+    });
+};
+const scriptCacheTtlTips = () => {
+  Dialog({
+      title: '脚本缓存时间 (秒)',
+      content: '主要涉及在脚本中使用的 scriptResourceCache 缓存',
+      popClass: 'auto-dialog',
+      okText: 'OK',
+      noCancelBtn: true,
+      closeOnPopstate: true,
+      lockScroll: false,
+    });
+};
+const concurrencyTips = () => {
+  Dialog({
+      title: '并发数',
+      content: 'Shadowrocket 并发可能会爆内存, 可设为 1',
+      popClass: 'auto-dialog',
+      okText: 'OK',
+      noCancelBtn: true,
+      closeOnPopstate: true,
+      lockScroll: false,
+    });
+};
+const apiCheckTimeoutTips = () => {
+  Dialog({
+      title: 'API 检测超时',
+      content: '某些版本的 Mac 上 QX https://sub.store/api/utils/env 可能会超时, JS 一直活跃中, 可设为 8000',
       popClass: 'auto-dialog',
       okText: 'OK',
       noCancelBtn: true,
@@ -710,14 +1024,15 @@ const setTag = (current) => {
     }
 
     .config-card {
-      margin-top: 20px;
+      margin-top: 10px;
       width: 100%;
-      padding: 12px;
+      padding: 6px 12px 6px 6px;
       border-radius: var(--item-card-radios);
       color: var(--second-text-color);
       background: var(--card-color);
 
       .title-wrapper {
+        cursor: pointer;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -779,6 +1094,7 @@ const setTag = (current) => {
       justify-content: space-between;
       align-items: center;
       padding: 12px 0 0 0;
+      margin-bottom: 20px;
 
       .avatar-wrapper {
         display: flex;
@@ -842,7 +1158,7 @@ const setTag = (current) => {
       }
     }
 
-    .change-themes {
+    .right-icon {
       // color: var(--comment-text-color);
       box-shadow: none;
       font-weight: bold;

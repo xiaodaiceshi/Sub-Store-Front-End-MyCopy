@@ -21,6 +21,9 @@ export const useSettingsStore = defineStore("settingsStore", {
       defaultProxy: "",
       defaultTimeout: "",
       cacheThreshold: "",
+      resourceCacheTtl: "",
+      headersCacheTtl: "",
+      scriptCacheTtl: "",
       syncTime: 0,
       theme: {
         auto: true,
@@ -41,6 +44,7 @@ export const useSettingsStore = defineStore("settingsStore", {
         showFloatingRefreshButton: false,
         showFloatingAddButton: false,
         displayPreviewInWebPage: true,
+        invalidShareFakeNode: false,
         istabBar: false,
         istabBar2: false,
         subProgressStyle: "hidden",
@@ -87,6 +91,7 @@ export const useSettingsStore = defineStore("settingsStore", {
         this.appearanceSetting.isSubItemMenuFold = res.data.data.appearanceSetting?.isSubItemMenuFold ?? true;
         this.appearanceSetting.showFloatingRefreshButton = res.data.data.appearanceSetting?.showFloatingRefreshButton ?? "";
         this.appearanceSetting.showFloatingAddButton = res.data.data.appearanceSetting?.showFloatingAddButton ?? false;
+        this.appearanceSetting.invalidShareFakeNode = res.data.data.appearanceSetting?.invalidShareFakeNode ?? false;
         this.appearanceSetting.istabBar = res.data.data.appearanceSetting?.istabBar ?? "";
         this.appearanceSetting.istabBar2 = res.data.data.appearanceSetting?.istabBar2 ?? "";
         this.appearanceSetting.subProgressStyle = res.data.data.appearanceSetting?.subProgressStyle ?? "hidden";
@@ -110,6 +115,9 @@ export const useSettingsStore = defineStore("settingsStore", {
         this.defaultUserAgent = res.data.data.defaultUserAgent || "";
         this.defaultTimeout = res.data.data.defaultTimeout || "";
         this.cacheThreshold = res.data.data.cacheThreshold || "";
+        this.resourceCacheTtl = res.data.data.resourceCacheTtl || "";
+        this.headersCacheTtl = res.data.data.headersCacheTtl || "";
+        this.scriptCacheTtl = res.data.data.scriptCacheTtl || "";
         this.avatarUrl = res.data.data.avatarUrl || "";
         this.artifactStore = res.data.data.artifactStore || "";
         this.artifactStoreStatus = res.data.data.artifactStoreStatus || "";

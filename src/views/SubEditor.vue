@@ -189,12 +189,13 @@
               type="text"
             /> -->
             <button class="cimg-button" @click="isDis = false">
-              <img src="" />
+              <font-awesome-icon icon="fa-solid fa-maximize" />
               {{ $t(`editorPage.subConfig.basic.url.tips.fullScreenEdit`) }}
               <!-- 测试 后续再改效果 -->
             </button>
             <input type="file" ref="fileInput" @change="fileChange" style="display: none">
             <button class="cimg-button" @click="upload">
+              <font-awesome-icon icon="fa-solid fa-cloud-arrow-up" />
               {{ $t(`editorPage.subConfig.basic.url.tips.importFromFile`) }}
             </button>
             <span class="button-tips" @click="contentTips">
@@ -215,7 +216,7 @@
             v-if="form.source === 'remote'"
           >
             <div class="switch-wrapper">
-              <nut-switch v-model="form.passThroughUA" />
+              <nut-switch v-model="form.passThroughUA" @change="handlePassThroughUAChange"/>
             </div>
           </nut-form-item>
           <nut-form-item
@@ -227,10 +228,11 @@
               :border="false"
               class="nut-input-text"
               v-model.trim="form.ua"
-              :placeholder="$t(`editorPage.subConfig.basic.ua.placeholder`)"
+              :placeholder="userAgentPlaceholder"
               type="text"
               input-align="right"
               left-icon="tips"
+              :readonly="passThroughUAOn"
               @click-left-icon="uaTips"
             />
           </nut-form-item>
@@ -467,7 +469,7 @@
 </div>
 <div v-else style="width: 100%;max-height: 95vh;">
     <button class="cimg-button" @click="isDis = true">
-      <img src="" />
+      <font-awesome-icon icon="fa-solid fa-minimize" />
       {{ $t(`editorPage.subConfig.basic.url.tips.fullScreenEditCancel`) }}
     </button>
     <cmView :isReadOnly="false" id="SubEditer" />
@@ -617,6 +619,7 @@ const padding = bottomSafeArea.value + "px";
     if(!Array.isArray(subscriptions) || subscriptions.length === 0) return `: ${t(`editorPage.subConfig.basic.subscriptions.empty`)}`
     return `: ${subscriptions.map((name) => {
       const sub = subsStore.getOneSub(name);
+      if(!sub) form.subscriptions = form.subscriptions.filter((n) => n !== name);
       return sub?.displayName || sub?.["display-name"] || sub?.name;
     }).join(', ')}`
   });
@@ -680,6 +683,12 @@ watchEffect(() => {
   }
 
   const sourceData: any = toRaw(sub.value) || toRaw(collection.value);
+  if (!sourceData) {
+    return;
+  }
+  if (!Array.isArray(sourceData.process)) {
+    sourceData.process = [];
+  }
   const newProcess = JSON.parse(JSON.stringify(sourceData.process));
   form.mergeSources = sourceData.mergeSources;
   let ignoreFailedRemoteSub = sourceData.ignoreFailedRemoteSub;
@@ -707,8 +716,9 @@ watchEffect(() => {
 
   switch (editType) {
     case "collections":
-      form.subscriptions = [];
-      form.subscriptions.push(...sourceData.subscriptions);
+      form.subscriptions = Array.isArray(sourceData.subscriptions)
+        ? [...sourceData.subscriptions]
+        : [];
       console.log('form.subscriptions ==>', form.subscriptions);
       break;
     case "subs":
@@ -717,6 +727,14 @@ watchEffect(() => {
       form.content = sourceData.content;
       cmStore.setEditCode('SubEditer', sourceData.content);
       form.ua = sourceData.ua;
+      form._savedUA = sourceData._savedUA;
+      if(form.passThroughUA && form.ua){
+        showNotify({
+          type: "warning",
+          title: t(`editorPage.subConfig.basic.passThroughUA.warning`),
+          duration: 65535,
+        });
+      }
       break;
   }
 
@@ -906,6 +924,28 @@ const compare = () => {
   });
 };
 
+const passThroughUAOn = computed(() => {
+  return form.source === "remote" && form.passThroughUA;
+});
+
+const userAgentPlaceholder = computed(() => {
+  return passThroughUAOn.value
+    ? t(`editorPage.subConfig.basic.ua.placeholderDisabled`)
+    : t(`editorPage.subConfig.basic.ua.placeholder`);
+});
+
+const handlePassThroughUAChange = (val) => {
+  if (val) {
+    form._savedUA = form.ua;
+    form.ua = "";
+  } else {
+    if (form._savedUA !== undefined) {
+      form.ua = form._savedUA;
+      form._savedUA = undefined;
+    }
+  }
+};
+
 const submit = () => {
   if (isget.value) {
     showNotify({
@@ -1077,7 +1117,7 @@ const urlValidator = (val: string): Promise<boolean> => {
   const subUserinfoTips = () => {
     Dialog({
         title: '手动设置订阅流量信息',
-        content: '若填写链接, 则使用链接的响应内容作为值.\n\n此项值的格式为:\n\nupload=1024; download=10240; total=102400; expire=4115721600; reset_day=14; plan_name=VIP1; app_url=http://a.com\n\n1. app_url, 订阅将有一个可点击跳转的按钮\n\n2. plan_name, hover 时将显示套餐名称\n\n3. reset_day, 流量重置剩余天数(若要设置周期性重置, 可查看订阅链接中的参数说明)\n\n⚠️ 注意: 手动设置的订阅流量信息会附加到订阅自己的流量信息之前. 若包含不合法的内容, 订阅将无法正常使用\n\n例如: http://官网.com 应编码为 http%3A%2F%2F%E5%AE%98%E7%BD%91.com',
+        content: '若填写链接, 则使用链接的响应体内容/响应头 subscription-userinfo 作为值.\n\n此项值的格式为:\n\nupload=1024; download=10240; total=102400; expire=4115721600; reset_day=14; plan_name=VIP1; app_url=http://a.com\n\n1. app_url, 订阅将有一个可点击跳转的按钮\n\n2. plan_name, hover 时将显示套餐名称\n\n3. reset_day, 流量重置剩余天数(若要设置周期性重置, 可查看订阅链接中的参数说明)\n\n⚠️ 注意: 手动设置的订阅流量信息会附加到订阅自己的流量信息之前. 若包含不合法的内容, 订阅将无法正常使用\n\n例如: http://官网.com 应编码为 http%3A%2F%2F%E5%AE%98%E7%BD%91.com',
         popClass: 'auto-dialog',
         okText: 'OK',
         noCancelBtn: true,
@@ -1088,7 +1128,7 @@ const urlValidator = (val: string): Promise<boolean> => {
   const proxyTips = () => {
     Dialog({
         title: '通过代理/节点/策略获取订阅',
-        content: '1. Surge(参数 policy/policy-descriptor)\n\n可设置节点代理 例: Test = snell, 1.2.3.4, 80, psk=password, version=4\n\n或设置策略/节点 例: 国外加速\n\n2. Loon(参数 node)\n\nLoon 官方文档: \n\n指定该请求使用哪一个节点或者策略组（可以使节点名称、策略组名称，也可以说是一个Loon格式的节点描述，如：shadowsocksr,example.com,1070,chacha20-ietf,"password",protocol=auth_aes128_sha1,protocol-param=test,obfs=plain,obfs-param=edge.microsoft.com）\n\n3. Stash(参数 headers["X-Surge-Policy"])/Shadowrocket(参数 headers.X-Surge-Policy)/QX(参数 opts.policy)\n\n可设置策略/节点\n\n4. Node.js 版(http/https/socks5):\n\n例: socks5://a:b@127.0.0.1:7890\n\n※ 优先级由高到低: 单条订阅, 组合订阅, 默认配置',
+        content: '1. Surge(参数 policy/policy-descriptor)\n\n可设置节点代理 例: Test = snell, 1.2.3.4, 80, psk=password, version=4\n\n或设置策略/节点 例: 国外加速\n\n2. Loon(参数 node)\n\nLoon 官方文档: \n\n指定该请求使用哪一个节点或者策略组（可以是节点名称、策略组名称，也可以是一个 Loon 格式的节点描述，如：shadowsocksr,example.com,1070,chacha20-ietf,"password",protocol=auth_aes128_sha1,protocol-param=test,obfs=plain,obfs-param=edge.microsoft.com）\n\n3. Stash(参数 headers["X-Surge-Policy"])/Shadowrocket(参数 headers.X-Surge-Policy)/QX(参数 opts.policy)\n\n可设置策略/节点\n\n4. Node.js 版(http/https/socks5):\n\n例: socks5://a:b@127.0.0.1:7890\n\n※ 优先级由高到低: 单条订阅, 组合订阅, 默认配置',
         popClass: 'auto-dialog',
         textAlign: 'left',
         okText: 'OK',
@@ -1186,39 +1226,24 @@ const urlValidator = (val: string): Promise<boolean> => {
   const filteredSubsSelectList = ref([]);
 
   const updateFilteredSubsList = () => {
-    if (subsSelectList.value && subsSelectList.value.length > 0) {
-      const filtered = subsSelectList.value.filter(item => shouldShowElement(item[3]));
-      
-      // 分离已勾选和未勾选的订阅
-      const selectedItems = [];
-      const unselectedItems = [];
-      
-      // 确保 form.subscriptions 存在
-      if (!form.subscriptions) {
-        form.subscriptions = [];
-      }
-      
-      // 优先添加已勾选的订阅
-      form.subscriptions.forEach(selectedName => {
-        const item = filtered.find(item => item[0] === selectedName);
-        if (item) {
-          selectedItems.push(item);
-        }
-      });
-      
-      // 添加未勾选的订阅
-      filtered.forEach(item => {
-        if (!form.subscriptions.includes(item[0])) {
-          unselectedItems.push(item);
-        }
-      });
-      
-      // 合并：已勾选的在前，未勾选的在后
-      filteredSubsSelectList.value = [...selectedItems, ...unselectedItems];
-    } else {
+    if (!subsSelectList.value?.length) {
       filteredSubsSelectList.value = [];
+      return;
     }
+    
+    form.subscriptions = form.subscriptions || [];
+    
+    // 当选中"全部"标签时，将已选中的订阅提到最前面；否则保持原顺序
+    filteredSubsSelectList.value = tag.value === 'all'
+      ? [
+          // 已选中的（按选中顺序）
+          ...form.subscriptions.map(name => subsSelectList.value.find(item => item[0] === name)).filter(Boolean),
+          // 未选中的
+          ...subsSelectList.value.filter(item => !form.subscriptions.includes(item[0]))
+        ]
+      : [...subsSelectList.value];
   };
+  // 监听 tag、subsSelectList 和 subsStore.subs 的变化时更新列表
   watch([tag, subsSelectList, () => subsStore.subs], () => {
     updateFilteredSubsList();
   }, { immediate: true, deep: true });
@@ -1233,7 +1258,10 @@ const urlValidator = (val: string): Promise<boolean> => {
     console.log("结束拖拽");
     isDragging.value = false;
   
-    const newFilteredOrder = filteredSubsSelectList.value.map(item => item[0]);
+    // 获取当前过滤视图中可见的订阅顺序
+    const visibleOrder = filteredSubsSelectList.value
+      .filter(item => shouldShowElement(item[3]))
+      .map(item => item[0]);
     
     const newSubscriptions = [];
     
@@ -1243,7 +1271,7 @@ const urlValidator = (val: string): Promise<boolean> => {
     }
     
     // 先按新顺序添加当前过滤列表中已选中的订阅
-    newFilteredOrder.forEach(name => {
+    visibleOrder.forEach(name => {
       if (form.subscriptions.includes(name)) {
         newSubscriptions.push(name);
       }
@@ -1251,7 +1279,7 @@ const urlValidator = (val: string): Promise<boolean> => {
     
     // 添加不在当前过滤列表中但已选中的订阅（保持原有顺序）
     form.subscriptions.forEach(name => {
-      if (!newFilteredOrder.includes(name)) {
+      if (!visibleOrder.includes(name)) {
         newSubscriptions.push(name);
       }
     });
